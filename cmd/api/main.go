@@ -22,7 +22,9 @@ func main() {
 
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to load config")
+		log.Fatal().
+			Err(err).
+			Msg("failed to load config")
 	}
 
 	// Initialize the logger.
@@ -46,15 +48,25 @@ func main() {
 	// Connect to the database.
 	pool, err := database.NewPool(rootCtx, cfg.Database.URL)
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to connect database")
+		log.Fatal().
+			Err(err).
+			Msg("failed to connect database")
 	}
 	defer pool.Close()
+
+	if err := database.RunMigrations(pool, cfg.Database.URL); err != nil {
+		log.Fatal().
+			Err(err).
+			Msg("failed to run migration")
+	}
 
 	// Create a new server struct instance.
 	srv := server.NewServer(cfg, pool)
 
 	// Start the API server.
 	if err := srv.Start(rootCtx); err != nil {
-		log.Fatal().Err(err).Msg("server exited with error")
+		log.Fatal().
+			Err(err).
+			Msg("server exited with error")
 	}
 }

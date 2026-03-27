@@ -45,10 +45,14 @@ func NewServer(cfg *config.Config, _ *pgxpool.Pool) *Server {
 func (s *Server) Start(ctx context.Context) error {
 	errCh := make(chan error, 1)
 	go func() {
-		log.Info().Str("addr", s.httpServer.Addr).Msg("server started")
+		log.Info().
+			Str("addr", s.httpServer.Addr).
+			Msg("server started")
 
 		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Error().Err(err).Msg("failed to start server")
+			log.Error().
+				Err(err).
+				Msg("failed to start server")
 			errCh <- err
 		}
 	}()
@@ -60,7 +64,9 @@ func (s *Server) Start(ctx context.Context) error {
 		defer cancel()
 
 		if err := s.httpServer.Shutdown(shutdownCtx); err != nil {
-			log.Error().Err(err).Msg("graceful shutdown failed")
+			log.Error().
+				Err(err).
+				Msg("graceful shutdown failed")
 			return err
 		}
 		log.Info().Msg("server stopped gracefully")
