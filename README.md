@@ -105,7 +105,7 @@ go run ./cmd/api
 
 ## API Endpoints
 
-All endpoints are prefixed with `/api/v1` except for /health
+All endpoints are prefixed with `/api/v1` except for `/health`
 
 | Method | Path                        | Description              |
 | ------ | --------------------------- | ------------------------ |
