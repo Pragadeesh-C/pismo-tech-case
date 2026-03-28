@@ -37,7 +37,7 @@ func (h *AccountsHandler) CreateAccount(c *gin.Context) {
 	if err := c.ShouldBindJSON(&request); err != nil {
 		log.Err(err).
 			Msg("invalid request body")
-		ErrorResponse(c, http.StatusBadRequest, "BAD_REQUEST", "Invalid request body")
+		ErrorResponse(c, http.StatusBadRequest, models.ErrCodeBadRequest, "invalid request body")
 		return
 	}
 
@@ -45,21 +45,16 @@ func (h *AccountsHandler) CreateAccount(c *gin.Context) {
 		DocumentNumber: request.DocumentNumber,
 	})
 	if err != nil {
-		if errors.Is(err, service.ErrAccountAlreadyExists) {
-			log.Err(err).
-				Msg("account already exists")
-			ErrorResponse(c, http.StatusConflict, "ACCOUNT_ALREADY_EXISTS", "account already exists")
-			return
-		}
-		if errors.Is(err, service.ErrDocNumEmpty) {
-			log.Err(err).
-				Msg("document number is empty")
-			ErrorResponse(c, http.StatusBadRequest, "DOCUMENT_NUMBER_EMPTY", "document number is empty")
-			return
-		}
 		log.Err(err).
-			Msg("error creating account")
-		ErrorResponse(c, http.StatusInternalServerError, "INTERNAL_ERROR", "not possible to create the account")
+			Msg("create account failed")
+		switch {
+		case errors.Is(err, service.ErrAccountAlreadyExists):
+			ErrorResponse(c, http.StatusConflict, models.ErrCodeAccountAlreadyExists, "account already exists")
+		case errors.Is(err, service.ErrDocNumEmpty):
+			ErrorResponse(c, http.StatusBadRequest, models.ErrCodeDocumentEmpty, "document number is empty")
+		default:
+			ErrorResponse(c, http.StatusInternalServerError, models.ErrCodeInternalError, "not possible to create the account")
+		}
 		return
 	}
 
@@ -84,29 +79,23 @@ func (h *AccountsHandler) GetAccount(c *gin.Context) {
 		log.Err(err).
 			Msg("error converting account id from string to int")
 
-		ErrorResponse(c, http.StatusBadRequest, "INVALID_ACCOUNT_ID", "account id is invalid")
+		ErrorResponse(c, http.StatusBadRequest, models.ErrCodeInvalidAccountID, "account id is invalid")
 		return
 	}
 
 	account, err := h.service.GetAccountByID(c.Request.Context(), accountId)
 	if err != nil {
-		if errors.Is(err, service.ErrAccountNotFound) {
-			log.Err(err).
-				Msg("account not found")
-			ErrorResponse(c, http.StatusNotFound, "ACCOUNT_NOT_FOUND", "account not found")
-			return
-		}
-		if errors.Is(err, service.ErrInvalidAccountID) {
-			log.Err(err).
-				Msg("invalid account id")
-
-			ErrorResponse(c, http.StatusBadRequest, "INVALID_ACCOUNT_ID", "account id is invalid")
-			return
-		}
-
 		log.Err(err).
-			Msg("error fetching account")
-		ErrorResponse(c, http.StatusInternalServerError, "INTERNAL_ERROR", "not possible to get the account")
+			Int("account_id", accountId).
+			Msg("get account failed")
+		switch {
+		case errors.Is(err, service.ErrAccountNotFound):
+			ErrorResponse(c, http.StatusNotFound, models.ErrCodeAccountNotFound, "account not found")
+		case errors.Is(err, service.ErrInvalidAccountID):
+			ErrorResponse(c, http.StatusBadRequest, models.ErrCodeInvalidAccountID, "account id is invalid")
+		default:
+			ErrorResponse(c, http.StatusInternalServerError, models.ErrCodeInternalError, "not possible to get the account")
+		}
 		return
 	}
 
