@@ -6,10 +6,20 @@ package repository
 
 import (
 	"time"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Account struct {
 	ID             int32
 	DocumentNumber string
 	CreatedAt      time.Time
+}
+
+type Transaction struct {
+	ID            int32
+	AccountID     int32
+	OperationType int16
+	Amount        pgtype.Numeric
+	EventDate     time.Time
 }

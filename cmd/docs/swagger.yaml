@@ -6,6 +6,22 @@ definitions:
     required:
     - document_number
     type: object
+  models.CreateTransactionRequest:
+    properties:
+      account_id:
+        example: 1
+        type: integer
+      amount:
+        example: 120.34
+        type: number
+      operation_type_id:
+        example: 2
+        type: integer
+    required:
+    - account_id
+    - amount
+    - operation_type_id
+    type: object
   models.ErrResponse:
     properties:
       error:
@@ -42,6 +58,27 @@ definitions:
       document_number:
         example: "12345"
         type: string
+    type: object
+  service.Transaction:
+    properties:
+      account_id:
+        example: 2
+        type: integer
+      amount:
+        example: 20.23
+        type: number
+      event_date:
+        example: "2026-03-28T10:00:00Z"
+        type: string
+      operation_type:
+        example: 2
+        type: integer
+      operation_type_name:
+        example: Purchase with Installments
+        type: string
+      transaction_id:
+        example: 1
+        type: integer
     type: object
 info:
   contact: {}
@@ -121,4 +158,43 @@ paths:
       summary: Get Account Details
       tags:
       - accounts
+  /transactions:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new transaction for an account id
+      parameters:
+      - description: Transaction input
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateTransactionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.Transaction'
+              type: object
+        "400":
+          description: BAD_REQUEST
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+        "404":
+          description: ACCOUNT_NOT_FOUND
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+        "500":
+          description: INTERNAL_ERROR
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+      summary: Create Transaction
+      tags:
+      - transactions
 swagger: "2.0"

@@ -40,14 +40,17 @@ func NewServer(cfg *config.Config, pool *pgxpool.Pool) *Server {
 
 	// Wire up services
 	accountsService := service.NewAccountsService(repo)
+	transactionService := service.NewTransactionService(repo)
 
 	// Handlers
 	accountsHandler := handler.NewAccountsHandler(accountsService)
+	transactionHandler := handler.NewTransactionHandler(transactionService)
 
 	r.GET("/health", HealthHandler())
 
 	route.RegisterRoutes(r, &route.Handlers{
-		Account: accountsHandler,
+		Account:     accountsHandler,
+		Transaction: transactionHandler,
 	})
 
 	return &Server{

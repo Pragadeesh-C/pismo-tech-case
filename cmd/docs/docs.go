@@ -137,6 +137,70 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/transactions": {
+            "post": {
+                "description": "Creates a new transaction for an account id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "transactions"
+                ],
+                "summary": "Create Transaction",
+                "parameters": [
+                    {
+                        "description": "Transaction input",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateTransactionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/models.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.Transaction"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "BAD_REQUEST",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "ACCOUNT_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -148,6 +212,28 @@ const docTemplate = `{
             "properties": {
                 "document_number": {
                     "type": "string"
+                }
+            }
+        },
+        "models.CreateTransactionRequest": {
+            "type": "object",
+            "required": [
+                "account_id",
+                "amount",
+                "operation_type_id"
+            ],
+            "properties": {
+                "account_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "amount": {
+                    "type": "number",
+                    "example": 120.34
+                },
+                "operation_type_id": {
+                    "type": "integer",
+                    "example": 2
                 }
             }
         },
@@ -202,6 +288,35 @@ const docTemplate = `{
                 "document_number": {
                     "type": "string",
                     "example": "12345"
+                }
+            }
+        },
+        "service.Transaction": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "amount": {
+                    "type": "number",
+                    "example": 20.23
+                },
+                "event_date": {
+                    "type": "string",
+                    "example": "2026-03-28T10:00:00Z"
+                },
+                "operation_type": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "operation_type_name": {
+                    "type": "string",
+                    "example": "Purchase with Installments"
+                },
+                "transaction_id": {
+                    "type": "integer",
+                    "example": 1
                 }
             }
         }

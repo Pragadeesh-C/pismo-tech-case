@@ -43,6 +43,7 @@ go run ./cmd/api
 |--------|------|-------------|
 | `POST` | `/api/v1/accounts` | Create a new account |
 | `GET`  | `/api/v1/accounts/:accountId` | Get account by ID |
+| `POST` | `/api/v1/transactions` | Create a new transaction |
 | `GET`  | `/health` | Health check |
 
 ## Environment Variables
