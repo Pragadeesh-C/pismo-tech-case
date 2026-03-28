@@ -1,0 +1,18 @@
+package mocks
+
+import (
+	"context"
+
+	"github.com/pragadeesh-c/pismo-tech-case/internal/repository"
+)
+
+// MockRepo is a test implementation of repository.Querier.
+// It enables injecting custom behavior for repository calls,
+// allowing the service layer to be tested in isolation.
+type MockRepo struct {
+	CreateAccountFn func(ctx context.Context, documentNumber string) (repository.Account, error)
+}
+
+func (m *MockRepo) CreateAccount(ctx context.Context, documentNumber string) (repository.Account, error) {
+	return m.CreateAccountFn(ctx, documentNumber)
+}

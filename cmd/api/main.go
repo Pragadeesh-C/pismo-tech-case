@@ -7,6 +7,7 @@ import (
 	"syscall"
 
 	"github.com/joho/godotenv"
+	_ "github.com/pragadeesh-c/pismo-tech-case/cmd/docs"
 	"github.com/pragadeesh-c/pismo-tech-case/internal/config"
 	"github.com/pragadeesh-c/pismo-tech-case/internal/database"
 	"github.com/pragadeesh-c/pismo-tech-case/internal/logger"
