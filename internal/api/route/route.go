@@ -9,7 +9,8 @@ import (
 )
 
 type Handlers struct {
-	Account *handler.AccountsHandler
+	Account     *handler.AccountsHandler
+	Transaction *handler.TransactionHandler
 }
 
 func RegisterRoutes(r *gin.Engine, h *Handlers) {
@@ -18,6 +19,7 @@ func RegisterRoutes(r *gin.Engine, h *Handlers) {
 	{
 		api.POST("/accounts", h.Account.CreateAccount)
 		api.GET("/accounts/:accountId", h.Account.GetAccount)
+		api.POST("/transactions", h.Transaction.CreateTransaction)
 	}
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }

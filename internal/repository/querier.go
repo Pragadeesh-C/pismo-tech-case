@@ -15,6 +15,12 @@ type Querier interface {
 	//  VALUES ($1)
 	//  RETURNING id, document_number, created_at
 	CreateAccount(ctx context.Context, documentNumber string) (Account, error)
+	//CreateTransaction
+	//
+	//  INSERT INTO transactions (account_id, operation_type, amount)
+	//  VALUES ($1, $2, $3)
+	//  RETURNING id, account_id, operation_type, amount, event_date
+	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
 	//GetAccount
 	//
 	//  SELECT id, document_number, created_at
