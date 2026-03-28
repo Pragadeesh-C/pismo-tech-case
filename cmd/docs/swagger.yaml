@@ -1,0 +1,124 @@
+definitions:
+  models.CreateAccountRequest:
+    properties:
+      document_number:
+        type: string
+    required:
+    - document_number
+    type: object
+  models.ErrResponse:
+    properties:
+      error:
+        $ref: '#/definitions/models.ErrorBody'
+      status:
+        example: false
+        type: boolean
+    type: object
+  models.ErrorBody:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+    type: object
+  models.SuccessResponse:
+    properties:
+      data: {}
+      message:
+        example: account created
+        type: string
+      status:
+        example: true
+        type: boolean
+    type: object
+  service.Account:
+    properties:
+      accountID:
+        example: 123
+        type: integer
+      createdAt:
+        example: "2026-03-28T10:00:00Z"
+        type: string
+      document_number:
+        example: "12345"
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /accounts:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new account with a document number
+      parameters:
+      - description: Account input
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.Account'
+              type: object
+        "400":
+          description: BAD_REQUEST
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+        "409":
+          description: ACCOUNT_ALREADY_EXISTS
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+        "500":
+          description: INTERNAL_ERROR
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+      summary: Create account
+      tags:
+      - accounts
+  /accounts/{accountId}:
+    get:
+      description: Retrieves account details for the given account ID
+      parameters:
+      - description: Account ID
+        in: path
+        name: accountId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.Account'
+              type: object
+        "400":
+          description: INVALID_ACCOUNT_ID
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+        "404":
+          description: ACCOUNT_NOT_FOUND
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+        "500":
+          description: INTERNAL_ERROR
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+      summary: Get Account Details
+      tags:
+      - accounts
+swagger: "2.0"

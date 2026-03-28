@@ -44,7 +44,7 @@ func RunMigrations(pool *pgxpool.Pool, dbURL string) error {
 	// Fix dirty state before migrate.New() touches the DB
 	fixDirtyState(pool)
 
-	m, err := migrate.New("file://migrations", dbURL)
+	m, err := migrate.New("file://db/migrations", dbURL)
 	if err != nil {
 		return err
 	}

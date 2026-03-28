@@ -9,8 +9,12 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/pragadeesh-c/pismo-tech-case/internal/api/handler"
 	"github.com/pragadeesh-c/pismo-tech-case/internal/api/middleware"
+	"github.com/pragadeesh-c/pismo-tech-case/internal/api/route"
 	"github.com/pragadeesh-c/pismo-tech-case/internal/config"
+	"github.com/pragadeesh-c/pismo-tech-case/internal/repository"
+	"github.com/pragadeesh-c/pismo-tech-case/internal/service"
 	"github.com/rs/zerolog/log"
 )
 
@@ -21,16 +25,30 @@ type Server struct {
 
 // NewServer creates a Gin engine with recovery and CORS, registers routes, and returns a Server.
 // The DB pool parameter is reserved for route handlers that will be wired in next.
-func NewServer(cfg *config.Config, _ *pgxpool.Pool) *Server {
+func NewServer(cfg *config.Config, pool *pgxpool.Pool) *Server {
 	gin.SetMode(cfg.Server.GinMode)
 
 	r := gin.New()
 	r.Use(
 		gin.Recovery(),
 		middleware.CORSMiddleware(),
+		middleware.RequestLogger(),
 	)
 
+	// Initialize repository with the pool connection
+	repo := repository.New(pool)
+
+	// Wire up services
+	accountsService := service.NewAccountsService(repo)
+
+	// Handlers
+	accountsHandler := handler.NewAccountsHandler(accountsService)
+
 	r.GET("/health", HealthHandler())
+
+	route.RegisterRoutes(r, &route.Handlers{
+		Account: accountsHandler,
+	})
 
 	return &Server{
 		httpServer: &http.Server{

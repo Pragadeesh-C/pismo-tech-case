@@ -38,6 +38,13 @@ go mod tidy
 go run ./cmd/api
 ```
 
+## API Endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/v1/accounts` | Create a new account |
+| `GET`  | `/api/v1/accounts/:accountId` | Get account by ID |
+| `GET`  | `/health` | Health check |
+
 ## Environment Variables
 
 | Variable | Default | Description |
@@ -47,6 +54,14 @@ go run ./cmd/api
 | `SERVER_GIN_MODE` | `debug` | Gin mode (`debug` / `release`) |
 | `LOG_ENV` | `production` | `development` for console, else JSON |
 | `LOG_LEVEL` | `info` | Log level (`debug`, `info`, `warn`, `error`) |
+
+## Running Tests
+
+    go test ./...
+
+## Swagger Documentation
+
+Once running, visit: `http://localhost:8080/swagger/index.html`
 
 ## Design Decisions
 
