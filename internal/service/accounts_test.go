@@ -55,7 +55,7 @@ func TestCreateAccount(t *testing.T) {
 			},
 			// Simulates Postgres unique constraint violation (23505)
 			mockErr: &pgconn.PgError{
-				Code:           "23505",
+				Code:           PgErrUniqueViolation,
 				ConstraintName: "accounts_document_number_key",
 			},
 			expectedError: ErrAccountAlreadyExists,
@@ -119,6 +119,9 @@ func TestCreateAccount(t *testing.T) {
 	}
 }
 
+// TestGetAccount verifies the AccountsService.GetAccountByID method.
+// It covers ID validation, not-found handling,
+// successful retrieval, and unexpected repository errors.
 func TestGetAccount(t *testing.T) {
 	tests := []struct {
 		name            string

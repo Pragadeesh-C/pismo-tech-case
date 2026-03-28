@@ -29,6 +29,7 @@ func NewAccountsService(repo repository.Querier) *AccountsService {
 	return &AccountsService{repo: repo}
 }
 
+// Create validates the document number, and inserts the account into the db.
 func (s *AccountsService) Create(ctx context.Context, input CreateAccountInput) (*Account, error) {
 	if strings.TrimSpace(input.DocumentNumber) == "" {
 		return nil, ErrDocNumEmpty
@@ -49,6 +50,7 @@ func (s *AccountsService) Create(ctx context.Context, input CreateAccountInput) 
 	}, nil
 }
 
+// GetAccountByID validates the account ID, and retrieves the account from the db.
 func (s *AccountsService) GetAccountByID(ctx context.Context, id int) (*Account, error) {
 	if id <= 0 {
 		return nil, ErrInvalidAccountID
@@ -69,10 +71,11 @@ func (s *AccountsService) GetAccountByID(ctx context.Context, id int) (*Account,
 	}, nil
 }
 
+// isDocumentConflict checks if the error is a unique constraint violation. This is to find if the error is due to the document number already exists
 func isDocumentConflict(err error) bool {
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) {
-		return pgErr.Code == "23505" &&
+		return pgErr.Code == PgErrUniqueViolation &&
 			pgErr.ConstraintName == "accounts_document_number_key"
 	}
 	return false
