@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/pragadeesh-c/pismo-tech-case/internal/repository"
 )
@@ -15,9 +16,9 @@ type CreateAccountInput struct {
 }
 
 type Account struct {
-	AccountID      int
-	DocumentNumber string
-	CreatedAt      time.Time
+	AccountID      int       `json:"accountID" example:"123"`
+	DocumentNumber string    `json:"document_number" example:"12345"`
+	CreatedAt      time.Time `json:"createdAt" example:"2026-03-28T10:00:00Z"`
 }
 
 type AccountsService struct {
@@ -37,6 +38,26 @@ func (s *AccountsService) Create(ctx context.Context, input CreateAccountInput) 
 	if err != nil {
 		if isDocumentConflict(err) {
 			return nil, ErrAccountAlreadyExists
+		}
+		return nil, err
+	}
+
+	return &Account{
+		AccountID:      int(account.ID),
+		DocumentNumber: account.DocumentNumber,
+		CreatedAt:      account.CreatedAt,
+	}, nil
+}
+
+func (s *AccountsService) GetAccountByID(ctx context.Context, id int) (*Account, error) {
+	if id <= 0 {
+		return nil, ErrInvalidAccountID
+	}
+
+	account, err := s.repo.GetAccount(ctx, int32(id))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrAccountNotFound
 		}
 		return nil, err
 	}

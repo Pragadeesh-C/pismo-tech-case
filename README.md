@@ -42,6 +42,7 @@ go run ./cmd/api
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/api/v1/accounts` | Create a new account |
+| `GET`  | `/api/v1/accounts/:accountId` | Get account by ID |
 | `GET`  | `/health` | Health check |
 
 ## Environment Variables

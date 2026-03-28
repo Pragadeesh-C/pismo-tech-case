@@ -28,15 +28,19 @@ definitions:
         example: account created
         type: string
       status:
+        example: true
         type: boolean
     type: object
   service.Account:
     properties:
       accountID:
+        example: 123
         type: integer
       createdAt:
+        example: "2026-03-28T10:00:00Z"
         type: string
-      documentNumber:
+      document_number:
+        example: "12345"
         type: string
     type: object
 info:
@@ -79,6 +83,42 @@ paths:
           schema:
             $ref: '#/definitions/models.ErrResponse'
       summary: Create account
+      tags:
+      - accounts
+  /accounts/{accountId}:
+    get:
+      description: Retrieves account details for the given account ID
+      parameters:
+      - description: Account ID
+        in: path
+        name: accountId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.SuccessResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.Account'
+              type: object
+        "400":
+          description: INVALID_ACCOUNT_ID
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+        "404":
+          description: ACCOUNT_NOT_FOUND
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+        "500":
+          description: INTERNAL_ERROR
+          schema:
+            $ref: '#/definitions/models.ErrResponse'
+      summary: Get Account Details
       tags:
       - accounts
 swagger: "2.0"

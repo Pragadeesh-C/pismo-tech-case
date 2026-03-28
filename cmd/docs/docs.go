@@ -78,6 +78,65 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/accounts/{accountId}": {
+            "get": {
+                "description": "Retrieves account details for the given account ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "accounts"
+                ],
+                "summary": "Get Account Details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Account ID",
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/models.SuccessResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/service.Account"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "INVALID_ACCOUNT_ID",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "ACCOUNT_NOT_FOUND",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "INTERNAL_ERROR",
+                        "schema": {
+                            "$ref": "#/definitions/models.ErrResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -124,7 +183,8 @@ const docTemplate = `{
                     "example": "account created"
                 },
                 "status": {
-                    "type": "boolean"
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },
@@ -132,13 +192,16 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "accountID": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 123
                 },
                 "createdAt": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2026-03-28T10:00:00Z"
                 },
-                "documentNumber": {
-                    "type": "string"
+                "document_number": {
+                    "type": "string",
+                    "example": "12345"
                 }
             }
         }

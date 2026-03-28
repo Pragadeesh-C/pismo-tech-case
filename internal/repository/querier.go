@@ -15,6 +15,12 @@ type Querier interface {
 	//  VALUES ($1)
 	//  RETURNING id, document_number, created_at
 	CreateAccount(ctx context.Context, documentNumber string) (Account, error)
+	//GetAccount
+	//
+	//  SELECT id, document_number, created_at
+	//  FROM accounts
+	//  WHERE id = $1
+	GetAccount(ctx context.Context, id int32) (Account, error)
 }
 
 var _ Querier = (*Queries)(nil)

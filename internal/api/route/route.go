@@ -17,6 +17,7 @@ func RegisterRoutes(r *gin.Engine, h *Handlers) {
 	api := r.Group("/api/v1")
 	{
 		api.POST("/accounts", h.Account.CreateAccount)
+		api.GET("/accounts/:accountId", h.Account.GetAccount)
 	}
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 }

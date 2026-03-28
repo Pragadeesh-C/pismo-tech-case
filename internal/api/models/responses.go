@@ -1,7 +1,7 @@
 package models
 
 type SuccessResponse struct {
-	Status  bool   `json:"status"`
+	Status  bool   `json:"status" example:"true"`
 	Message string `json:"message,omitempty" example:"account created"`
 	Data    any    `json:"data,omitempty"`
 }

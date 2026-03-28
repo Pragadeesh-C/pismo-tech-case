@@ -26,3 +26,21 @@ func (q *Queries) CreateAccount(ctx context.Context, documentNumber string) (Acc
 	err := row.Scan(&i.ID, &i.DocumentNumber, &i.CreatedAt)
 	return i, err
 }
+
+const getAccount = `-- name: GetAccount :one
+SELECT id, document_number, created_at
+FROM accounts
+WHERE id = $1
+`
+
+// GetAccount
+//
+//	SELECT id, document_number, created_at
+//	FROM accounts
+//	WHERE id = $1
+func (q *Queries) GetAccount(ctx context.Context, id int32) (Account, error) {
+	row := q.db.QueryRow(ctx, getAccount, id)
+	var i Account
+	err := row.Scan(&i.ID, &i.DocumentNumber, &i.CreatedAt)
+	return i, err
+}
