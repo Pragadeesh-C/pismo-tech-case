@@ -7,36 +7,114 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const createTransaction = `-- name: CreateTransaction :one
-INSERT INTO transactions (account_id, operation_type, amount)
-VALUES ($1, $2, $3)
-RETURNING id, account_id, operation_type, amount, event_date
+INSERT INTO transactions (account_id, operation_type, amount, balance)
+VALUES ($1, $2, $3, $4)
+RETURNING id, account_id, operation_type, amount, balance, event_date
 `
 
 type CreateTransactionParams struct {
 	AccountID     int32
 	OperationType int16
 	Amount        pgtype.Numeric
+	Balance       pgtype.Numeric
+}
+
+type CreateTransactionRow struct {
+	ID            int32
+	AccountID     int32
+	OperationType int16
+	Amount        pgtype.Numeric
+	Balance       pgtype.Numeric
+	EventDate     time.Time
 }
 
 // CreateTransaction
 //
-//	INSERT INTO transactions (account_id, operation_type, amount)
-//	VALUES ($1, $2, $3)
-//	RETURNING id, account_id, operation_type, amount, event_date
-func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error) {
-	row := q.db.QueryRow(ctx, createTransaction, arg.AccountID, arg.OperationType, arg.Amount)
-	var i Transaction
+//	INSERT INTO transactions (account_id, operation_type, amount, balance)
+//	VALUES ($1, $2, $3, $4)
+//	RETURNING id, account_id, operation_type, amount, balance, event_date
+func (q *Queries) CreateTransaction(ctx context.Context, arg CreateTransactionParams) (CreateTransactionRow, error) {
+	row := q.db.QueryRow(ctx, createTransaction,
+		arg.AccountID,
+		arg.OperationType,
+		arg.Amount,
+		arg.Balance,
+	)
+	var i CreateTransactionRow
 	err := row.Scan(
 		&i.ID,
 		&i.AccountID,
 		&i.OperationType,
 		&i.Amount,
+		&i.Balance,
 		&i.EventDate,
 	)
 	return i, err
+}
+
+const fetchAllDebitTransactionsByAccountID = `-- name: FetchAllDebitTransactionsByAccountID :many
+SELECT id, account_id, operation_type, amount, event_date, balance from transactions
+WHERE account_id = $1 AND balance < 0
+ORDER BY event_date, id
+FOR UPDATE
+`
+
+// FetchAllDebitTransactionsByAccountID
+//
+//	SELECT id, account_id, operation_type, amount, event_date, balance from transactions
+//	WHERE account_id = $1 AND balance < 0
+//	ORDER BY event_date, id
+//	FOR UPDATE
+func (q *Queries) FetchAllDebitTransactionsByAccountID(ctx context.Context, accountID int32) ([]Transaction, error) {
+	rows, err := q.db.Query(ctx, fetchAllDebitTransactionsByAccountID, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Transaction
+	for rows.Next() {
+		var i Transaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.AccountID,
+			&i.OperationType,
+			&i.Amount,
+			&i.EventDate,
+			&i.Balance,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateTransactionByID = `-- name: UpdateTransactionByID :exec
+UPDATE transactions 
+SET balance = $2
+WHERE id = $1
+`
+
+type UpdateTransactionByIDParams struct {
+	ID      int32
+	Balance pgtype.Numeric
+}
+
+// UpdateTransactionByID
+//
+//	UPDATE transactions
+//	SET balance = $2
+//	WHERE id = $1
+func (q *Queries) UpdateTransactionByID(ctx context.Context, arg UpdateTransactionByIDParams) error {
+	_, err := q.db.Exec(ctx, updateTransactionByID, arg.ID, arg.Balance)
+	return err
 }

@@ -22,4 +22,5 @@ type Transaction struct {
 	OperationType int16
 	Amount        pgtype.Numeric
 	EventDate     time.Time
+	Balance       pgtype.Numeric
 }

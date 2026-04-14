@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"testing"
 	"time"
 
@@ -22,7 +23,7 @@ func TestCreateTransaction(t *testing.T) {
 		input               CreateTransaction
 		mockErr             error
 		expectedError       error
-		expectedTransaction repository.CreateTransactionParams
+		expectedTransaction repository.CreateTransactionRow
 	}{
 		{
 			name: "success",
@@ -33,7 +34,7 @@ func TestCreateTransaction(t *testing.T) {
 			},
 			mockErr:       nil,
 			expectedError: nil,
-			expectedTransaction: repository.CreateTransactionParams{
+			expectedTransaction: repository.CreateTransactionRow{
 				AccountID:     1,
 				OperationType: 1,
 				Amount:        mustNumeric(20.3),
@@ -71,20 +72,37 @@ func TestCreateTransaction(t *testing.T) {
 			mockErr:       nil,
 			expectedError: ErrInvalidAmount,
 		},
+		{
+			name: "partial discharge",
+			input: CreateTransaction{
+				AccountID:     1,
+				OperationType: 4,
+				Amount:        60,
+			},
+			mockErr:       nil,
+			expectedError: nil,
+			expectedTransaction: repository.CreateTransactionRow{
+				ID:            1,
+				AccountID:     1,
+				OperationType: 4,
+				Amount:        mustNumeric(60),
+				Balance:       mustNumeric(0),
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			repoCalled := false
 			mockRepo := &mocks.MockRepo{
-				CreateTransactionFn: func(ctx context.Context, transaction repository.CreateTransactionParams) (repository.Transaction, error) {
+				CreateTransactionFn: func(ctx context.Context, transaction repository.CreateTransactionParams) (repository.CreateTransactionRow, error) {
 					repoCalled = true
 
 					if tt.mockErr != nil {
-						return repository.Transaction{}, tt.mockErr
+						return repository.CreateTransactionRow{}, tt.mockErr
 					}
 
-					return repository.Transaction{
+					return repository.CreateTransactionRow{
 						ID:            1,
 						AccountID:     transaction.AccountID,
 						OperationType: transaction.OperationType,
@@ -92,9 +110,43 @@ func TestCreateTransaction(t *testing.T) {
 						EventDate:     time.Now(),
 					}, nil
 				},
+				FetchAllDebitTransactionsByAccountIDFn: func(ctx context.Context, accountID int32) ([]repository.Transaction, error) {
+					return []repository.Transaction{
+						{
+							ID:            1,
+							AccountID:     1,
+							OperationType: 1,
+							Amount:        mustNumeric(-50),
+							Balance:       mustNumeric(-50),
+						},
+						{
+							ID:            2,
+							AccountID:     1,
+							OperationType: 1,
+							Amount:        mustNumeric(-23.5),
+							Balance:       mustNumeric(-23.5),
+						},
+						{
+							ID:            3,
+							AccountID:     1,
+							OperationType: 1,
+							Amount:        mustNumeric(-18.7),
+							Balance:       mustNumeric(-18.7),
+						},
+					}, nil
+				},
+				UpdateTransactionByIDFn: func(ctx context.Context, arg repository.UpdateTransactionByIDParams) error {
+					return nil
+				},
 			}
 
-			service := NewTransactionService(mockRepo)
+			mockStore := &mocks.MockStore{
+				WithTransactionFn: func(ctx context.Context, fn func(q repository.Querier) error) error {
+					return fn(mockRepo)
+				},
+			}
+
+			service := NewTransactionService(mockStore)
 
 			transaction, err := service.Create(context.Background(), tt.input)
 
@@ -108,6 +160,42 @@ func TestCreateTransaction(t *testing.T) {
 
 			if tt.expectedError == nil && transaction == nil {
 				t.Fatal("expected transaction, got nil")
+			}
+
+			if tt.expectedError != nil {
+				return
+			}
+
+			txAmountInNumeric, err := numericToFloat(transaction.Amount)
+			if err != nil {
+				t.Fatalf("error occured while converting transaction amount to numeric: %v", err)
+			}
+			txAmountAbs := math.Abs(*txAmountInNumeric)
+
+			expectedAmountInNumeric, err := numericToFloat(tt.expectedTransaction.Amount)
+			if err != nil {
+				t.Fatalf("error occured while converting expected transaction amount to numeric: %v", err)
+			}
+			expectedAmountAbs := math.Abs(*expectedAmountInNumeric)
+
+			if txAmountAbs != expectedAmountAbs {
+				t.Fatalf("expected transaction amount: %.2f, got: %.2f", expectedAmountAbs, txAmountAbs)
+			}
+
+			txBalanceInNumeric, err := numericToFloat(transaction.Balance)
+			if err != nil {
+				t.Fatalf("error occured while converting transaction balance to numeric: %v", err)
+			}
+			txBalanceAbs := math.Abs(*txBalanceInNumeric)
+
+			expectedBalanceInNumeric, err := numericToFloat(tt.expectedTransaction.Balance)
+			if err != nil {
+				t.Fatalf("error occured while converting expected transaction balance to numeric: %v", err)
+			}
+			expectedBalanceAbs := math.Abs(*expectedBalanceInNumeric)
+
+			if txBalanceAbs != expectedBalanceAbs {
+				t.Fatalf("expected transaction balance: %.2f, got: %.2f", expectedBalanceAbs, txBalanceAbs)
 			}
 		})
 	}

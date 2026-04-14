@@ -1,0 +1,2 @@
+ALTER TABLE transactions
+ADD COLUMN balance NUMERIC(12,2) NOT NULL;
