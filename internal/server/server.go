@@ -37,10 +37,11 @@ func NewServer(cfg *config.Config, pool *pgxpool.Pool) *Server {
 
 	// Initialize repository with the pool connection
 	repo := repository.New(pool)
+	store := repository.NewStore(pool)
 
 	// Wire up services
 	accountsService := service.NewAccountsService(repo)
-	transactionService := service.NewTransactionService(repo)
+	transactionService := service.NewTransactionService(store)
 
 	// Handlers
 	accountsHandler := handler.NewAccountsHandler(accountsService)

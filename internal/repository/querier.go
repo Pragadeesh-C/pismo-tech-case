@@ -17,16 +17,29 @@ type Querier interface {
 	CreateAccount(ctx context.Context, documentNumber string) (Account, error)
 	//CreateTransaction
 	//
-	//  INSERT INTO transactions (account_id, operation_type, amount)
-	//  VALUES ($1, $2, $3)
-	//  RETURNING id, account_id, operation_type, amount, event_date
-	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (Transaction, error)
+	//  INSERT INTO transactions (account_id, operation_type, amount, balance)
+	//  VALUES ($1, $2, $3, $4)
+	//  RETURNING id, account_id, operation_type, amount, balance, event_date
+	CreateTransaction(ctx context.Context, arg CreateTransactionParams) (CreateTransactionRow, error)
+	//FetchAllDebitTransactionsByAccountID
+	//
+	//  SELECT id, account_id, operation_type, amount, event_date, balance from transactions
+	//  WHERE account_id = $1 AND balance < 0
+	//  ORDER BY event_date, id
+	//  FOR UPDATE
+	FetchAllDebitTransactionsByAccountID(ctx context.Context, accountID int32) ([]Transaction, error)
 	//GetAccount
 	//
 	//  SELECT id, document_number, created_at
 	//  FROM accounts
 	//  WHERE id = $1
 	GetAccount(ctx context.Context, id int32) (Account, error)
+	//UpdateTransactionByID
+	//
+	//  UPDATE transactions
+	//  SET balance = $2
+	//  WHERE id = $1
+	UpdateTransactionByID(ctx context.Context, arg UpdateTransactionByIDParams) error
 }
 
 var _ Querier = (*Queries)(nil)
